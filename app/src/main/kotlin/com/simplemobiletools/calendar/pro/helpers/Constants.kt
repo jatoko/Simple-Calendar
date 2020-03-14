@@ -75,6 +75,7 @@ const val ALLOW_CHANGING_TIME_ZONES = "allow_changing_time_zones"
 const val LAST_EXPORT_PATH = "last_export_path"
 const val EXPORT_PAST_EVENTS = "export_past_events"
 const val WEEKLY_VIEW_ITEM_HEIGHT_MULTIPLIER = "weekly_view_item_height_multiplier"
+const val DEFAULT_CLASSIFICATION = "default_classification"
 
 // repeat_rule for monthly and yearly repetition
 const val REPEAT_SAME_DAY = 1                           // i.e. 25th every month, or 3rd june (if yearly repetition)
@@ -116,6 +117,11 @@ const val BYMONTH = "BYMONTH"
 const val LOCATION = "LOCATION"
 const val RECURRENCE_ID = "RECURRENCE-ID"
 const val SEQUENCE = "SEQUENCE"
+// RFC5545#section-3.8.1.3
+const val CLASSIFICATION = "CLASS"
+const val PUBLIC = "PUBLIC"
+const val PRIVATE = "PRIVATE"
+const val CONFIDENTIAL = "CONFIDENTIAL"
 
 // this tag isn't a standard ICS tag, but there's no official way of adding a category color in an ics file
 const val CATEGORY_COLOR = "CATEGORY_COLOR:"

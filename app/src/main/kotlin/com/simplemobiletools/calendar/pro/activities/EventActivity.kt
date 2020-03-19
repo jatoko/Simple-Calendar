@@ -784,12 +784,6 @@ class EventActivity : SimpleActivity() {
         }
     }
 
-    private fun updateEventClassification(){
-        ensureBackgroundThread {
-
-        }
-    }
-
     private fun updateCalDAVCalendar() {
         if (config.caldavSync) {
             event_caldav_calendar_image.beVisible()

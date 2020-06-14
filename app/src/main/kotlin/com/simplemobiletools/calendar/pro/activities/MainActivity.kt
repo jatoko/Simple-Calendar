@@ -5,7 +5,6 @@ import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.ColorDrawable
@@ -83,15 +82,12 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         appLaunched(BuildConfig.APPLICATION_ID)
 
         checkWhatsNewDialog()
-        calendar_fab.beVisibleIf(config.storedView != YEARLY_VIEW)
+        calendar_fab.beVisibleIf(config.storedView != YEARLY_VIEW && config.storedView != WEEKLY_VIEW)
         calendar_fab.setOnClickListener {
             launchNewEventIntent(currentFragments.last().getNewEventDayCode())
         }
 
         storeStateVariables()
-        if (resources.getBoolean(R.bool.portrait_only)) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        }
 
         if (!hasPermission(PERMISSION_WRITE_CALENDAR) || !hasPermission(PERMISSION_READ_CALENDAR)) {
             config.caldavSync = false
@@ -126,7 +122,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     override fun onResume() {
         super.onResume()
         if (mStoredTextColor != config.textColor || mStoredBackgroundColor != config.backgroundColor || mStoredPrimaryColor != config.primaryColor
-                || mStoredDayCode != Formatter.getTodayCode() || mStoredDimPastEvents != config.dimPastEvents) {
+            || mStoredDayCode != Formatter.getTodayCode() || mStoredDimPastEvents != config.dimPastEvents) {
             updateViewPager()
         }
 
@@ -283,7 +279,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
                 mIsSearchOpen = false
                 search_holder.beGone()
-                calendar_fab.beVisibleIf(currentFragments.last() !is YearFragmentsHolder)
+                calendar_fab.beVisibleIf(currentFragments.last() !is YearFragmentsHolder && currentFragments.last() !is WeekFragmentsHolder)
                 invalidateOptionsMenu()
                 return true
             }
@@ -329,11 +325,11 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
             val intent = Intent(this, SplashActivity::class.java)
             intent.action = SHORTCUT_NEW_EVENT
             val shortcut = ShortcutInfo.Builder(this, "new_event")
-                    .setShortLabel(newEvent)
-                    .setLongLabel(newEvent)
-                    .setIcon(Icon.createWithBitmap(bmp))
-                    .setIntent(intent)
-                    .build()
+                .setShortLabel(newEvent)
+                .setLongLabel(newEvent)
+                .setIcon(Icon.createWithBitmap(bmp))
+                .setIntent(intent)
+                .build()
 
             try {
                 manager.dynamicShortcuts = Arrays.asList(shortcut)
@@ -407,17 +403,16 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
 
     private fun showViewDialog() {
         val items = arrayListOf(
-                RadioItem(DAILY_VIEW, getString(R.string.daily_view)),
-                RadioItem(WEEKLY_VIEW, getString(R.string.weekly_view)),
-                RadioItem(MONTHLY_VIEW, getString(R.string.monthly_view)),
-                RadioItem(YEARLY_VIEW, getString(R.string.yearly_view)),
-                RadioItem(EVENTS_LIST_VIEW, getString(R.string.simple_event_list)))
+            RadioItem(DAILY_VIEW, getString(R.string.daily_view)),
+            RadioItem(WEEKLY_VIEW, getString(R.string.weekly_view)),
+            RadioItem(MONTHLY_VIEW, getString(R.string.monthly_view)),
+            RadioItem(YEARLY_VIEW, getString(R.string.yearly_view)),
+            RadioItem(EVENTS_LIST_VIEW, getString(R.string.simple_event_list)))
 
         RadioGroupDialog(this, items, config.storedView) {
-            calendar_fab.beVisibleIf(it as Int != YEARLY_VIEW)
             resetActionBarTitle()
             closeSearch()
-            updateView(it)
+            updateView(it as Int)
             shouldGoToTodayBeVisible = false
             invalidateOptionsMenu()
         }
@@ -558,9 +553,9 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         var eventsFound = 0
         val uri = Data.CONTENT_URI
         val projection = arrayOf(Contacts.DISPLAY_NAME,
-                CommonDataKinds.Event.CONTACT_ID,
-                CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP,
-                CommonDataKinds.Event.START_DATE)
+            CommonDataKinds.Event.CONTACT_ID,
+            CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP,
+            CommonDataKinds.Event.START_DATE)
 
         val selection = "${Data.MIMETYPE} = ? AND ${CommonDataKinds.Event.TYPE} = ?"
         val type = if (birthdays) CommonDataKinds.Event.TYPE_BIRTHDAY else CommonDataKinds.Event.TYPE_ANNIVERSARY
@@ -592,8 +587,8 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
                     val source = if (birthdays) SOURCE_CONTACT_BIRTHDAY else SOURCE_CONTACT_ANNIVERSARY
                     val lastUpdated = cursor.getLongValue(CommonDataKinds.Event.CONTACT_LAST_UPDATED_TIMESTAMP)
                     val event = Event(null, timestamp, timestamp, name, reminder1Minutes = reminders[0], reminder2Minutes = reminders[1],
-                            reminder3Minutes = reminders[2], importId = contactId, timeZone = DateTimeZone.getDefault().id, flags = FLAG_ALL_DAY,
-                            repeatInterval = YEAR, repeatRule = REPEAT_SAME_DAY, eventType = eventTypeId, source = source, lastUpdated = lastUpdated)
+                        reminder3Minutes = reminders[2], importId = contactId, timeZone = DateTimeZone.getDefault().id, flags = FLAG_ALL_DAY,
+                        repeatInterval = YEAR, repeatRule = REPEAT_SAME_DAY, eventType = eventTypeId, source = source, lastUpdated = lastUpdated)
 
                     val importIDsToDelete = ArrayList<String>()
                     for ((key, value) in importIDs) {
@@ -647,7 +642,7 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
     }
 
     private fun updateView(view: Int) {
-        calendar_fab.beVisibleIf(view != YEARLY_VIEW)
+        calendar_fab.beVisibleIf(view != YEARLY_VIEW && view != WEEKLY_VIEW)
         config.storedView = view
         checkSwipeRefreshAvailability()
         updateViewPager()
@@ -846,15 +841,15 @@ class MainActivity : SimpleActivity(), RefreshRecyclerViewListener {
         val licenses = LICENSE_JODA
 
         val faqItems = arrayListOf(
-                FAQItem(R.string.faq_1_title_commons, R.string.faq_1_text_commons),
-                FAQItem(R.string.faq_4_title_commons, R.string.faq_4_text_commons),
-                FAQItem(R.string.faq_1_title, R.string.faq_1_text),
-                FAQItem(R.string.faq_2_title, R.string.faq_2_text),
-                FAQItem(R.string.faq_3_title, R.string.faq_3_text),
-                FAQItem(R.string.faq_4_title, R.string.faq_4_text),
-                FAQItem(R.string.faq_2_title_commons, R.string.faq_2_text_commons),
-                FAQItem(R.string.faq_6_title_commons, R.string.faq_6_text_commons),
-                FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons))
+            FAQItem(R.string.faq_1_title_commons, R.string.faq_1_text_commons),
+            FAQItem(R.string.faq_4_title_commons, R.string.faq_4_text_commons),
+            FAQItem(R.string.faq_1_title, R.string.faq_1_text),
+            FAQItem(R.string.faq_2_title, R.string.faq_2_text),
+            FAQItem(R.string.faq_3_title, R.string.faq_3_text),
+            FAQItem(R.string.faq_4_title, R.string.faq_4_text),
+            FAQItem(R.string.faq_2_title_commons, R.string.faq_2_text_commons),
+            FAQItem(R.string.faq_6_title_commons, R.string.faq_6_text_commons),
+            FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons))
 
         startAboutActivity(R.string.app_name, licenses, BuildConfig.VERSION_NAME, faqItems, true)
     }
